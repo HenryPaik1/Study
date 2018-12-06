@@ -1,3 +1,157 @@
+-- group by with agg(count, min, max, sum, avg)
+use world;
+select countrycode, count(CountryCode) as count 
+from city
+group by Countrycode
+order by COUNT DESC;
+
+-- distinct
+select count(DISTINCT(language)) as count
+from countrylanguage;
+
+-- max & group by
+select population, GNP
+from country;
+
+-- continent별 max(population), max(GNP)
+-- 1)
+select Continent, Population, GNP
+from country;
+-- 2) group by continent;
+select Continent, max(Population), max(GNP)
+from country
+group by continent;
+
+-- 최소값 구하기
+select continent, min(Population), min(GNP)
+from country
+GROUP BY continent;
+
+-- 0인 것 제외하고 구하기
+SELECT continent, min(Population), min(GNP)
+FROM country
+where GNP != 0 and Population != 0
+group by continent;
+
+-- 대륙별 총(인구수)와 총(GNP)
+select continent, sum(population), sum(GNP), 
+sum(GNP)/sum(Population)
+from country
+GROUP BY continent;
+
+-- 그룹바이 후 필터링은?
+select continent, population
+from country;
+
+-- 대륙을 세는 방법
+select continent, count(*) as count
+from country
+group by continent
+order by count DESC;
+
+-- 비교 where (alias 불가) -> groupby agg 이후이므로
+-- 조건 having -> agg 이후의 컬럼을 조건
+select continent, sum(Population) as S
+from country
+GROUP BY continent
+having S > 5000000
+ORDER BY S DESC;
+
+select continent, sum(Population) as population
+from country
+where Population > 5000000
+GROUP BY continent
+ORDER BY population DESC;
+
+-- 퀴즈1 continent별 일인당 GNP 
+select continent, avg(Population), avg(GNP),
+avg(GNP)/avg(population) as ratio
+from country
+where GNP != 0 and population != 0
+group by continent
+ORDER BY ratio DESC;
+
+-- 퀴즈2 중복 제거 continent 조회
+select DISTINCT(Continent) 
+from country;
+
+-- 퀴즈3 한국 도시 중, 인구 100만 넘는 도시 조회, 인구순 내림차순
+select name, CountryCode, population
+from city
+where CountryCode='KOR' and population > 1000000
+ORDER BY Population DESC;
+
+-- 퀴즈4 city 테이블, pop 800만 ~ 1000만 사이 도시, 인구 내림차순
+select name, countrycode, population
+from city
+where population >= 8000000 and population <= 10000000
+order by population DESC;
+
+-- 퀴즈5 country table 1940~50 독립 국가 조회, 독립 연도 순 오름차순
+select name,
+concat(name, "(", indepyear, ")") as name_indepyear,
+Continent, population
+from country
+ORDER BY indepyear DESC;
+
+-- 퀴즈6 countrylanguage 테이블 스페인어, 한국어, 영어 95%이상,
+-- 국가코드를 percentage로 내림차순
+select countrycode, Language, Percentage
+from countrylanguage
+where Language in ("Korean", "Spanish", "English") and
+percentage >= 95
+ORDER BY percentage DESC;
+
+-- 퀴즈7 country table, code가 A로 시작, 
+-- GovernmentFrome에 Republic 포함하는 데이터
+-- like, in
+select code, name, continent, GovernmentForm, Population
+from country
+where code like "A%" and GovernmentForm like "%Republic%";
+
+-- 퀴즈1 country 테이블 몇개 대륙
+-- count
+select COUNT(distinct(Continent)) as count
+from country;
+
+-- 퀴즈2 대륙별 나라가 몇개 있는
+select continent, count(*) as count
+from country
+GROUP BY continent 
+ORDER BY count DESC;
+
+-- 퀴즈3 국가코드별로 총인구 몇명, 내림차순
+select countrycode, sum(population) as popsum
+from city
+group by countrycode 
+order by popsum DESC;
+
+-- 퀴즈4 countrylanguage 언어별 사용 국가수 조회
+-- 많이 사용하는 언어 5~10위
+-- LIMIT a, b: 인덱스a(0 부터 시작)부터 b개
+select Language, count(*) as count
+from countrylanguage
+GROUP BY Language
+ORDER BY count DESC
+LIMIT 4, 6;
+
+-- 퀴즈5 countrylangage 테이블
+-- 언어별 15개 국가 이상에서 사용되는 언어 조회
+-- 언어별 국가수에 따라 내림차순
+select language, count(*) as count
+from countrylanguage
+group by language
+having count >= 15
+order by count DESC;
+
+-- 퀴즈6 country table
+-- 대륙별 전체 표면적 크기 구하고
+-- 표면적 크기 순으로 내림차순
+select Continent, sum(SurfaceArea)
+from country
+GROUP BY Continent
+order by continent DESC;
+
 create database test;
 use test;
 select test;
