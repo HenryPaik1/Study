@@ -1,0 +1,72 @@
+# 3.
+#lang: countrycode, lang, percentage
+#country: code, name, population
+use world;
+select language, round(sum(population*percentage)) as count
+from
+    (
+    select countrylanguage.CountryCode, 
+    countrylanguage.Percentage, countrylanguage.language,
+    country.population
+    from countrylanguage
+    join country
+    on countrylanguage.CountryCode=country.code
+    ) as new
+group by language
+order by count DESC;
+
+# 4. 
+# name 2개 처리방법/ percentage 사용
+#city:population
+#country:population
+#join country code
+
+select 
+    city.Name, 
+    country.code, 
+    country.name, 
+    round((city.population / country.population)*100, 2) as percentage
+from city
+join country
+on city.countrycode = country.code
+where city.population >= 5000000
+and round((city.population / country.population)*100, 2) > 10
+order by percentage DESC;
+
+# 5.1.
+#조건: 면적10000 이상 국가, 인구밀도 200이상
+#만약 코드가 다른 셀에 있었다면? join
+select 
+    code, 
+    name,
+    round((population/surfacearea)) as density
+from country
+where surfacearea >= 10000
+order by density DESC;
+
+# 5.2.
+select name, count(code) as language_count
+from
+    (select 
+        new.name,
+        countrylanguage.language,
+        new.density,
+        new.code
+    from 
+        (select 
+            code, 
+            name,
+            round(population/surfacearea) as density
+        from country
+        where surfacearea >= 10000
+        order by density DESC) as new
+    join countrylanguage
+    on countrylanguage.countrycode = new.code
+    where density >= 200) as new1
+group by code
+having language_count >= 5
+order by language_count DESC;
+
+#6
+
+
