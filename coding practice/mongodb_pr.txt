@@ -1,0 +1,161 @@
+db.createCollection("info");
+db.info.insert([
+{ "subject":"r", "level":3, "comments": [{"name":"jin","msg":"bad"},
+{"name":"alice","msg":"hi"}] }, { "subject":"java", "level":1, "comments":
+[{"name":"po","msg":"check"}] },
+{ "subject":"javascript", "comments": [{"name":"jin","msg":"nice"}] },
+{ "subject":"html", "level":3, "comments": [] },
+{ "subject":"css", "level":1, "comments": [{"name":"alice", "msg":"hello"}] },
+{ "subject":"python", "level":2, "comments": [{"name":"alice", "msg":"hello"}] },
+{ "subject":"python", "level":5, "comments": [{"name":"jin","msg":"nice"}] }
+]);
+db.info.find();
+db.info.find({'subject':'python'});
+# where : js syntax
+db.info.find({$where:"this.comments.length==0"});
+db.info.find({$where:"this.comments.length >= 1"});
+db.info.find({$where: "this.level == 1"})
+# elemMatch
+db.info.find({"comments": {$elemMatch: {"name":"alice"}}});
+db.info.find(
+    {"comments":
+        {$elemMatch:
+            {$or:[{"name":"alice"}, {"name":"jin"}]
+                }
+            
+            }
+        
+        }
+)
+        
+# find
+db.info.find({"comments.name":"alice"})
+db.info.find(
+    {$or: [
+        {"comments.name":"alice"},
+        {"comments.name":"jin"}
+        ]
+            }
+)
+# exist: show data whic has no specific column val
+# print rows which has no level value
+db.info.find({level: {$exists:false}})
+db.info.find()
+
+# projection: show specific columns(documents)
+## _id: defalut true
+db.info.find({}, {"_id":false, "level":false})
+db.info.find({}, {"subject":true, "comments":true})
+
+# $slice: dsp not more than *num
+db.info.find({},{comments:{$slice:2}})
+
+#sort
+## asce by lev
+db.info.find().sort({"level":1})
+## dsce by lev
+db.info.find().sort({"level":-1})
+## multiple sorting
+db.info.find().sort({"level":-1, "_id":1})
+
+# limit(5)
+## dsp 5
+db.info.find().limit(5)
+db.info.find().sort({level:-1}).limit(3)
+
+# skip(2)
+## 2+1:
+db.info.find().skip(2)
+db.info.find()
+
+# upsert 
+## true: insert and update
+## false: update
+db.info.update(
+    {"subject":"csss"},
+    {"subject":"sass", "level":2, "comments":[{"name":"alice", "msg":"hello"}]},
+    {"upsert":true}
+)
+    
+db.info.update(
+        {"subject":"less"},
+        {"subject":"less", "level":2, "comments":[{"name":"alice", "msg":"hello"}]},
+        {"upsert":true}
+)
+
+# $set, $unset: correct specific field
+## correct one data
+db.info.update({subject: "python"}, {$set: {level:3}})
+## correct multiple data
+## {multi:true}
+db.info.update(
+    {subject:"python"},
+    {$set:{level:4}},
+    {multi: true}
+)
+# $unset
+## remove "level" field of "subject: java"
+## 1 = true    
+db.info.update(
+    {subject:"java"},
+    {$unset: {level:1}}
+    )
+## update data which level is lower than 3
+db.info.update(
+    {level:{$lte:3}},
+    {$set:{level:1}},
+    {multi: 1}
+    )    
+## create "level" field of data which has no "level"
+db.info.update(
+    {level: {$exists:false}},
+    {$set: {level:3}},
+    {multi:1}
+    )
+db.info.find()
+ 
+# push: add array  
+# each: add multiple array   
+db.info.update(
+    {subject: "java"},
+    {$push:{"comments": {"name": "peter", "msg":"java is cool"}}}
+    )
+db.info.update(
+    {subject: "java"},
+    {$push: {"comments":{
+            $each: [{"name":"jin", "msg":"echo jin"}, {"name":"alice", "msg":"echo alice"}]
+        }}}
+    )
+        
+# $pull: remove val of an array
+# $in:  select multiple vals
+db.info.update(
+        {subject:"java"},
+        {$pull: {"comments":{"name":"po"}}}
+        )
+db.info.update(
+        {subject:"java"},
+        {$pull:{comments:
+                    {$in: [{"name":"jin", "msg":"echo jin"},
+                            {"name":"alice", "msg":"i'm alice"}
+                    ]}
+            }}
+        )
+            
+#function
+## skip func
+var showSkip = function(start){
+    return db.info.find().skip(start)
+    }
+showSkip(3)
+## limit func
+var showLimit = function(end){
+    return db.info.find().limit(end)
+    }
+showLimit(3)    
+
+##page block func
+var showPage = function(page, block){
+    return db.info.find().skip((page-1)*block).limit(block)
+    }  
+showPage(2,3)
