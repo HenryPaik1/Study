@@ -67,6 +67,37 @@ group by code
 having language_count >= 5
 order by language_count DESC;
 
-#6
+#6. 
+create view brand_new as
+(
+select 
+    new.countrycode,
+    new1.city_name,
+    new1.population,
+    new1.name,
+    new.language_count,
+    new.languages
+from
+    (select 
+        countrycode,
+        count(countrycode) as language_count,
+        group_concat(language) as languages
+    from countrylanguage
+    group by countrycode
+    having language_count <= 3) as new
+join 
+    (select 
+        city.countrycode, 
+        city.name as city_name,
+        city.population,
+        country.name as name
+    from city
+    join country
+    on city.countrycode = country.code
+    where city.population >= 3000000) as new1
+on new.countrycode = new1.countrycode
+order by population DESC
+);
 
-
+select *
+from brand_new;
