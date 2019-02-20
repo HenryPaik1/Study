@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>Crime Map</title>
+    </head>
+    <body>
+        <h1>Crime Map</h1>
+        <!-- form action attribute: move to URL when clicking submit -->
+        <form action="/add" method="POST">
+            <input type="text" name="userinput">
+            <input type="submit" value="Submit">
+        </form>
+
+        <!-- move to "/clear" URL  -->
+        <a href="/clear">clear</a>
+
+        {% for userinput in data %}
+            <p>{{userinput}}</p>
+            {% endfor %}
+    </body>
+</html>
