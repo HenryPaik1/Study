@@ -1,0 +1,108 @@
+# 통계쿼리 and group by는 관련없음
+# groupby는 기준 정하는 것
+select 
+     count(*) as total_count
+    ,user_id
+    ,count(DISTINCT user_id) as user_count
+    ,count(distinct product_id) as product_count
+    ,sum(score) as sum
+    ,avg(score) as avg
+    ,min(score) as min
+    ,max(score) as max
+from review
+group by user_id;
+
+# window의 의미는 집약함수와 원래 값을 함께 다루는 것
+# OVER(order by 기준)
+select
+    user_id
+    , product_id
+    , score
+    , AVG(score) OVER() AS avg_score
+    , AVG(score) OVER(PARTITION BY user_id) AS user_avg_score
+    , score - AVG(score) OVER()
+FROM review;
+
+# 윈도우 누
+SELECT
+    product_id
+    , score
+    , SUM(score)
+        OVER(ORDER BY score DESC) as row1
+    , ROW_NUMBER() OVER(ORDER BY score DESC) AS row2
+    , RANK() OVER(ORDER BY score DESC) AS row3
+    , DENSE_RANK() OVER(ORDER BY score DESC) AS dense_rank1
+    , LAG(product_id) OVER(ORDER BY score DESC) AS lag1
+    , LAG(product_id, 2) OVER(ORDER BY score DESC) AS lag2
+    , LEAD(product_id) OVER(ORDER BY score DESC) AS lead1
+    , LEAD(product_id, 2) OVER(ORDER BY score DESC) AS lead2
+FROM popular_products
+ORDER BY row1;
+
+SELECT
+    product_id
+    , score
+    , ROW_NUMBER() OVER(ORDER BY score DESC) AS row1
+    , SUM(score) 
+        OVER(ORDER BY score DESC
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+    AS cum_score
+    , AVG(score)
+        OVER(ORDER BY score DESC) AS cum_sum
+    , AVG(score)
+        OVER(ORDER BY score DESC
+            ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS local_avg
+    , FIRST_VALUE(product_id) 
+        OVER(ORDER BY score DESC
+            ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+    , LAST_VALUE(product_id)
+        OVER(ORDER BY score DESC
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+FROM popular_products
+ORDER BY row1;
+
+# 
+SELECT
+    product_id
+    , AVG(score) as avg_score
+    , GROUP_CONCAT(category)
+FROM popular_products
+GROUP BY product_id;
+
+# window function with partition by
+SELECT
+    category
+    , product_id
+    , score
+    , ROW_NUMBER()
+        OVER(PARTITION BY category ORDER BY score DESC) AS row1
+FROM popular_products
+ORDER BY category, row1;
+
+# sub query(rank) and where
+SELECT *
+FROM
+(
+SELECT
+    category
+    , product_id
+    , score
+    , ROW_NUMBER()
+        OVER(PARTITION BY category ORDER BY score DESC) AS rank1
+FROM popular_products
+) AS popular_products_with_rank
+
+WHERE rank1 <= 3
+ORDER BY category, rank1
+;
+
+SELECT DISTINCT
+    category
+    , ROW_NUMBER(product_id)
+        OVER(PARTITION BY category ORDER BY score DESC
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as product_id
+FROM popular_products
+;
+
+
+
